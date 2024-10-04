@@ -17,7 +17,8 @@ use App\Http\Controllers\api\TimesheetController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
+Route::post('user/register', [AuthController::class, 'register']);
+Route::post('user/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::resource('timesheet', TimesheetController::class);
     Route::post('timesheet/{id}', [TimesheetController::class, 'update']);
@@ -29,5 +30,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('logout', [AuthController::class, 'logout']);
 });
 
-Route::post('user/register', [AuthController::class, 'register']);
-Route::post('user/login', [AuthController::class, 'login']);
+

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectCreateRequest;
 use App\Http\Requests\ProjectUpdateRequest;
 use App\Models\Project;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -17,7 +18,14 @@ class ProjectController extends Controller
 
     public function show($id)
     {
-        return response()->json(["project" => Project::find($id) ?? null]);
+        try {
+            $project = Project::findOrFail($id);
+            return response()->json(["project" => $project]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'project not found'
+            ], 404);
+        }
     }
 
     public function store(ProjectCreateRequest $request)
@@ -29,18 +37,31 @@ class ProjectController extends Controller
 
     public function update($id,ProjectUpdateRequest $request)
     {
-        $project = Project::findOrFail($id);
+        try {
+            $project = Project::findOrFail($id);
 
-        $project->update($request->toArray());
+            $project->update($request->toArray());
 
-        return response()->json(["message" => "Project updated successfully","project" =>$project], 200);
+            return response()->json(["message" => "Project updated successfully","project" =>$project], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'project not found'
+            ], 404);
+        }
+
     }
 
     public function destroy($id)
     {
-        $project = Project::findOrFail($id);
-        $project->delete();
+        try {
+            $project = Project::findOrFail($id);
+            $project->delete();
+            return response()->json(['message' => 'Project deleted successfully'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'project not found'
+            ], 404);
+        }
 
-        return response()->json(['message' => 'Project deleted successfully'], 200);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UserCreateRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,7 +31,14 @@ class UserController extends Controller
 
     public function show($id)
     {
-        return User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
+            return response()->json(["user" => $user]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'user not found'
+            ], 404);
+        }
     }
 
     public function store(UserCreateRequest $request)
@@ -45,23 +53,33 @@ class UserController extends Controller
 
     public function update($id,UserUpdateRequest $request)
     {
-        $user = User::findOrFail($id);
-
-        if (isset($request['password'])) {
-            $request['password'] = Hash::make($request['password']);
+        try {
+            $user = User::findOrFail($id);
+            if (isset($request['password'])) {
+                $request['password'] = Hash::make($request['password']);
+            }
+            $user->update($request->toArray());
+            return response()->json(["user" => $user]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'user not found'
+            ], 404);
         }
 
-        $user->update($request->toArray());
-
-        return response()->json($user, 200);
     }
 
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->timesheets()->delete();
-        $user->delete();
+        try {
+            $user = User::findOrFail($id);
+            $user->timesheets()->delete();
+            $user->delete();
+            return response()->json(['message' => 'User and related timesheets deleted'], 200);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error' => 'user not found'
+            ], 404);
+        }
 
-        return response()->json(['message' => 'User and related timesheets deleted'], 200);
     }
 }
